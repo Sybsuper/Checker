@@ -20,6 +20,7 @@ fun SolutionInput(onInput: (String) -> Unit) {
         },
         singleLine = false,
         label = { Text("Solution Input") },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        maxLines = 5
     )
 }

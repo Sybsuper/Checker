@@ -8,7 +8,9 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun CommentsList(commentsList: List<Comment>) {
-    LazyVerticalGrid(columns = GridCells.Fixed(1)) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(1)
+    ) {
         items(commentsList) { comment ->
             CommentItem(comment)
         }

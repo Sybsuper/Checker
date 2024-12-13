@@ -24,6 +24,7 @@ kotlin {
                         // Serve sources to debug inside browser
                         add(rootDirPath)
                         add(projectDirPath)
+                        add("$projectDirPath/src/wasmJsMain/resources")
                     }
                 }
             }
