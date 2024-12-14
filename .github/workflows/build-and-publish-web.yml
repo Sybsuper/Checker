@@ -44,6 +44,6 @@ jobs:
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FOLDER: composeApp/build/dist/wasmJs/productionExecutable # The folder the action should deploy.
-          CLEAN: true # Automatically remove deleted files from the deploy branch
+          token: ${{ secrets.GITHUB_TOKEN }}
+          folder: composeApp/build/dist/wasmJs/productionExecutable # The folder the action should deploy.
+          clean: true # Automatically remove deleted files from the deploy branch
