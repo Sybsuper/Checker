@@ -10,9 +10,17 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.text.TextLayoutInput
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -68,9 +76,15 @@ fun App() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun Visualizer(solution: Solution) {
-    Canvas(modifier=Modifier.fillMaxSize()) {
+    val textMeasurer = rememberTextMeasurer()
+    val mousePos = remember { mutableStateOf(Offset(0f, 0f)) }
+    Canvas(modifier=Modifier.fillMaxSize().onPointerEvent(PointerEventType.Move) {
+        val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
+        mousePos.value = newPos
+    }) {
         val minCoordX = Problem.orders.minOf { it.coordX }
         val minCoordY = Problem.orders.minOf { it.coordY }
         val maxCoordX = Problem.orders.maxOf { it.coordX }
@@ -89,9 +103,19 @@ fun Visualizer(solution: Solution) {
                 radius = 2.5f,
                 center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
             )
+            if (mousePos.value.x in coordToScreenX(order.coordX) - 4..coordToScreenX(order.coordX) + 4 &&
+                mousePos.value.y in coordToScreenY(order.coordY) - 4..coordToScreenY(order.coordY) + 4) {
+                drawCircle(
+                    color = Color.Black,
+                    radius = 5f,
+                    center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
+                )
+                drawText(textMeasurer, "Order ${order.id}", Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY)))
+            }
         }
         val colors = listOf(Color.Red, Color.Green, Color.Blue, Color.Magenta, Color.Cyan, Color.Yellow, Color.Gray,
-            Color.DarkGray, Color.LightGray, Color(0.2f,0.5f,0.8f), Color(0.8f,0.5f,0.2f))
+            Color.DarkGray, Color.LightGray, Color(0.2f,0.5f,0.8f), Color(0.8f,0.5f,0.2f),
+            Color(0.3f,0.9f,0.7f))
         var lastNode = Problem.orderMap[0u]!!
         var tripId = 0
         for (vehicle in solution.trips) for (day in vehicle) for (order in day) {
