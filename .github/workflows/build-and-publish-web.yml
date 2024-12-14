@@ -1,5 +1,8 @@
 name: Build and Publish
 
+# stolen from https://github.com/joreilly/chip-8/blob/main/.github/workflows/build-and-publish-web.yml
+
+
 # configure manual trigger
 on:
   push:
@@ -25,7 +28,7 @@ jobs:
 
       # Build application
       - name: Test and Build
-        run: gradle :composeApp:build
+        run: chmod +x ./gradlew && ./gradlew :composeApp:build
 
       - name: Copy "uninstantiated" file over (workaround for now)
         run: cp composeApp/build/compileSync/wasmJs/main/productionExecutable/kotlin/chip8.uninstantiated.mjs composeApp/build/dist/wasmJs/productionExecutable
