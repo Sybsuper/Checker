@@ -138,34 +138,6 @@ fun Visualizer(solution: Solution) {
             )
         )
 
-        var count = 0
-        for (order in Problem.orders) {
-            drawCircle(
-                color = Color.Black,
-                radius = 2.5f,
-                center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
-            )
-            if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 && mousePos.value.y in coordToScreenY(
-                    order.coordY
-                ) - 3..coordToScreenY(order.coordY) + 3
-            ) {
-                drawCircle(
-                    color = Color.Black,
-                    radius = 5f,
-                    center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
-                )
-                if (count == 0) {
-                    val pos = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
-                    drawNode(textMeasurer, order, pos)
-                } else {
-                    val pos = Offset(
-                        (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
-                    )
-                    drawNode(textMeasurer, order, pos)
-                }
-                count++
-            }
-        }
         val colors = listOf(
             Color.Red,
             Color.Green,
@@ -193,6 +165,35 @@ fun Visualizer(solution: Solution) {
             lastNode = node
             if (node.id == 0u.toUShort()) {
                 tripId++
+            }
+        }
+
+        var count = 0
+        for (order in Problem.orders) {
+            drawCircle(
+                color = Color.Black,
+                radius = 2.5f,
+                center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
+            )
+            if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 && mousePos.value.y in coordToScreenY(
+                    order.coordY
+                ) - 3..coordToScreenY(order.coordY) + 3
+            ) {
+                drawCircle(
+                    color = Color.Black,
+                    radius = 5f,
+                    center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
+                )
+                if (count == 0) {
+                    val pos = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
+                    drawNode(textMeasurer, order, pos)
+                } else {
+                    val pos = Offset(
+                        (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
+                    )
+                    drawNode(textMeasurer, order, pos)
+                }
+                count++
             }
         }
     }
