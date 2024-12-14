@@ -31,7 +31,13 @@ jobs:
         run: chmod +x ./gradlew && ./gradlew :composeApp:build
 
       - name: Copy "uninstantiated" file over (workaround for now)
-        run: cp composeApp/build/compileSync/wasmJs/main/productionExecutable/kotlin/chip8.uninstantiated.mjs composeApp/build/dist/wasmJs/productionExecutable
+        run: cp composeApp/build/compileSync/wasmJs/main/productionExecutable/kotlin/composeApp.uninstantiated.mjs composeApp/build/dist/wasmJs/productionExecutable
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.3.3 # https://github.com/actions/upload-artifact/releases
+        with:
+          name: Click here to download
+          path: composeApp/build/libs/composeApp-desktop.jar
 
       # If main branch update, deploy to gh-pages
       - name: Deploy
