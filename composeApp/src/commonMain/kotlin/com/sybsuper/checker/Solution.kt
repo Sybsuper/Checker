@@ -14,9 +14,9 @@ class Solution {
 
         val declinedSet = mutableSetOf<Order>()
         for (order in Problem.orders) {
-            if (order.id == 0) continue
+            if (order.id == 0.toUShort()) continue
             var declined = true
-            if (order.frequency == 1) {
+            if (order.frequency == 1.toByte()) {
                 for (vehicle in trips) for (day in vehicle) for (order2 in day) {
                     if (order == order2) {
                         declined = false
@@ -24,7 +24,7 @@ class Solution {
                     }
                 }
             } else {
-                val setsOfDays = daysToBePickedUp(order.frequency)
+                val setsOfDays = daysToBePickedUp(order.frequency.toInt())
                 if (setsOfDays.any { days ->
                         days.all {
                             var found = false
@@ -59,12 +59,12 @@ class Solution {
         for ((vehiceleId, vehicle) in trips.withIndex()) {
             for ((dayId, day) in vehicle.withIndex()) {
                 var time = 0.0
-                var lastOrder: Order = Problem.orderMap[0]!!
+                var lastOrder: Order = Problem.orderMap[0u]!!
                 var waste = 0
                 var tripId = 1
                 for ((i, order) in day.withIndex()) {
                     time += Problem.distance(lastOrder.matrixId, order.matrixId)
-                    if (order.id == 0) {
+                    if (order.id == 0.toUShort()) {
                         if (waste == 0) {
                             if (i == 0) {
                                 comments.add(
@@ -102,7 +102,7 @@ class Solution {
                         tripId++
                         waste = 0
                     } else {
-                        waste += order.containers * order.volumePerContainer
+                        waste += order.volume.toInt()
                         time += order.emptyDurationSeconds
                     }
                     lastOrder = order

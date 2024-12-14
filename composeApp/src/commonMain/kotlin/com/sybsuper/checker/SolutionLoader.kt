@@ -40,7 +40,7 @@ class SolutionLoader {
             if (day !in 1..5) return listOf(Comment("Invalid day number on line [${index + 1}]: $line", Severity.ERROR))
 
             val dailyVehicleCount = params[2]
-            val orderId = params[3]
+            val orderId = params[3].toUShort()
 
             val order = Problem.orderMap[orderId] ?: return listOf(
                 Comment(

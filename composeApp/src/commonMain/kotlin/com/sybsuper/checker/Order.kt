@@ -1,13 +1,12 @@
 package com.sybsuper.checker
 
 data class Order(
-    val id: Int,
+    val id: UShort,
     val location: String,
-    val frequency: Int,
-    val containers: Int,
-    val volumePerContainer: Int,
-    val emptyDurationSeconds: Double,
-    val matrixId: Int,
+    val frequency: Byte,
+    val volume: UShort,
+    val emptyDurationSeconds: Float,
+    val matrixId: UShort,
     val coordX: Long,
     val coordY: Long
 )
