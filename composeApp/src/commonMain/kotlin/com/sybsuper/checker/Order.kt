@@ -6,7 +6,7 @@ data class Order(
     val frequency: Int,
     val containers: Int,
     val volumePerContainer: Int,
-    val emptyDurationMinutes: Double,
+    val emptyDurationSeconds: Double,
     val matrixId: Int,
     val coordX: Long,
     val coordY: Long

@@ -1,5 +1,8 @@
 package com.sybsuper.checker
 
+import kotlin.math.round
+import kotlin.math.roundToInt
+
 class Solution {
     var trips: MutableList<MutableList<MutableList<Order>>> = mutableListOf()
 
@@ -48,7 +51,7 @@ class Solution {
                 }
             }
             if (declined) {
-                declinedPenalty += order.frequency * order.emptyDurationMinutes * 3
+                declinedPenalty += order.frequency * order.emptyDurationSeconds * 3
                 declinedSet.add(order)
             }
         }
@@ -56,15 +59,11 @@ class Solution {
         for ((vehiceleId, vehicle) in trips.withIndex()) {
             for ((dayId, day) in vehicle.withIndex()) {
                 var time = 0.0
-                var lastOrder: Order? = null
+                var lastOrder: Order = Problem.orderMap[0]!!
                 var waste = 0
                 var tripId = 1
                 for ((i, order) in day.withIndex()) {
-                    time += if (lastOrder != null) {
-                        Problem.distance(lastOrder.matrixId, order.matrixId)
-                    } else {
-                        Problem.distance(0, order.matrixId)
-                    }
+                    time += Problem.distance(lastOrder.matrixId, order.matrixId)
                     if (order.id == 0) {
                         if (waste == 0) {
                             if (i == 0) {
@@ -96,7 +95,7 @@ class Solution {
                         }
                         comments.add(
                             Comment(
-                                "Vehicle ${vehiceleId + 1} on day ${dayId + 1} on trip $tripId returns to the depot after collecting $waste/100,000 waste and spending $time/43200 seconds.",
+                                "Vehicle ${vehiceleId + 1} on day ${dayId + 1} on trip $tripId returns to the depot after collecting $waste/100,000 waste and spending ${time.roundToInt()}/43200 seconds.",
                                 Severity.INFO
                             )
                         )
@@ -104,14 +103,14 @@ class Solution {
                         waste = 0
                     } else {
                         waste += order.containers * order.volumePerContainer
-                        time += order.emptyDurationMinutes
+                        time += order.emptyDurationSeconds
                     }
                     lastOrder = order
                 }
                 if (time > 43200.0) {
                     comments.add(
                         Comment(
-                            "Vehicle ${vehiceleId + 1} on day ${dayId + 1} exceeds the maximum duration of 8 hours.",
+                            "Vehicle ${vehiceleId + 1} on day ${dayId + 1} exceeds the maximum duration of 8 hours. (took: ${time.roundToInt()}/43200 seconds)",
                             Severity.ERROR
                         )
                     )
@@ -121,9 +120,9 @@ class Solution {
             }
         }
 
-        comments.add(Comment("Total duration: ${durationSeconds / 60.0} minutes", Severity.INFO))
-        comments.add(Comment("Declined penalty: $declinedPenalty", Severity.INFO))
-        comments.add(Comment("Score: ${durationSeconds / 60.0 + declinedPenalty} minutes", Severity.INFO))
+        comments.add(Comment("Total duration: ${(durationSeconds / 60.0).round(2)} minutes", Severity.INFO))
+        comments.add(Comment("Declined penalty: ${(declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
+        comments.add(Comment("Score: ${(durationSeconds / 60.0 + declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
         comments.add(Comment("Orders declined: ${declinedSet.size} ${declinedSet.map { it.id }}", Severity.INFO))
 
 
@@ -147,3 +146,4 @@ class Solution {
         }
     }
 }
+
