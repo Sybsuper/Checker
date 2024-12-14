@@ -1,6 +1,11 @@
 package com.sybsuper.checker
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
@@ -15,9 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
@@ -46,11 +48,13 @@ fun App() {
     }
     MaterialTheme {
         // load screen for Problem init
-        if (loading) {
+        AnimatedVisibility(
+            visible = loading, enter = fadeIn(), exit = fadeOut() + scaleOut(targetScale = 3f)
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().background(Color(0.66f, 0.66f, 0.66f, 0.66f))
             ) {
                 Row {
                     CircularProgressIndicator()
@@ -115,7 +119,7 @@ fun Visualizer(solution: Solution) {
         val tpos = center + (mousePos.value - center) * (if (scrollChange > 0) 0.125f else -0.124f)
         zoomCenter.value = screenToCoordX(tpos.x) to screenToCoordY(tpos.y)
 //        zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
-        zoom.value *= 1 + scrollChange / 10
+        zoom.value *= 1 + scrollChange / 25
     }.onPointerEvent(PointerEventType.Press) {
         if (it.button == PointerButton.Tertiary) {
             val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
@@ -129,9 +133,9 @@ fun Visualizer(solution: Solution) {
         scaleX.value = width.value / rangeX
         scaleY.value = height.value / rangeY
         drawCircle(
-            color = Color.Black,
-            radius = 2.5f,
-            center = Offset(coordToScreenX(screenToCoordX(mousePos.value.x)), coordToScreenY(screenToCoordY(mousePos.value.y)))
+            color = Color.Black, radius = 2.5f, center = Offset(
+                coordToScreenX(screenToCoordX(mousePos.value.x)), coordToScreenY(screenToCoordY(mousePos.value.y))
+            )
         )
 
         var count = 0
@@ -141,8 +145,9 @@ fun Visualizer(solution: Solution) {
                 radius = 2.5f,
                 center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
             )
-            if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 &&
-                mousePos.value.y in coordToScreenY(order.coordY) - 3..coordToScreenY(order.coordY) + 3
+            if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 && mousePos.value.y in coordToScreenY(
+                    order.coordY
+                ) - 3..coordToScreenY(order.coordY) + 3
             ) {
                 drawCircle(
                     color = Color.Black,
@@ -154,8 +159,7 @@ fun Visualizer(solution: Solution) {
                     drawNode(textMeasurer, order, pos)
                 } else {
                     val pos = Offset(
-                        (((count * 100) / height.value.toInt()) * 300f) % width.value,
-                        (count * 100) % height.value
+                        (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
                     )
                     drawNode(textMeasurer, order, pos)
                 }
@@ -163,8 +167,17 @@ fun Visualizer(solution: Solution) {
             }
         }
         val colors = listOf(
-            Color.Red, Color.Green, Color.Blue, Color.Magenta, Color.Cyan, Color.Yellow, Color.Gray,
-            Color.DarkGray, Color.LightGray, Color(0.2f, 0.5f, 0.8f), Color(0.8f, 0.5f, 0.2f),
+            Color.Red,
+            Color.Green,
+            Color.Blue,
+            Color.Magenta,
+            Color.Cyan,
+            Color.Yellow,
+            Color.Gray,
+            Color.DarkGray,
+            Color.LightGray,
+            Color(0.2f, 0.5f, 0.8f),
+            Color(0.8f, 0.5f, 0.2f),
             Color(0.3f, 0.9f, 0.7f)
         )
         var lastNode = Problem.orderMap[0u]!!
@@ -186,9 +199,7 @@ fun Visualizer(solution: Solution) {
 }
 
 private fun DrawScope.drawNode(
-    textMeasurer: TextMeasurer,
-    order: Order,
-    pos: Offset
+    textMeasurer: TextMeasurer, order: Order, pos: Offset
 ) {
     drawText(
         textMeasurer, """
@@ -204,8 +215,7 @@ private fun DrawScope.drawNode(
 @Composable
 fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, coroutineScope: CoroutineScope) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(16.dp)
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)
     ) {
         Row(modifier = Modifier.padding(vertical = 8.dp)) {
             SolutionInput {
