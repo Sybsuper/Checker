@@ -23,7 +23,7 @@ fun App() {
     }
     var loading by remember { mutableStateOf(true) }
     rememberCoroutineScope().launch {
-        Problem.orders
+        Problem.init()
         loading = false
     }
     MaterialTheme {
