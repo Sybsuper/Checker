@@ -25,8 +25,7 @@ class Problem {
         private suspend fun loadDistances() {
             val url = "DistanceMatrix.txt"
             val bytes = Res.readBytes("files/$url")
-
-            val lines = bytes.toString().lines().drop(1)
+            val lines = bytes.decodeToString().lines().drop(1)
             for (i in lines.indices) {
                 val line = lines[i]
                 if (line.isEmpty()) continue
@@ -44,7 +43,7 @@ class Problem {
         private suspend fun loadOrders() {
             val url = "Orders.txt"
             val bytes = Res.readBytes("files/$url")
-            val lines = bytes.toString().lines().drop(1)
+            val lines = bytes.decodeToString().lines().drop(1)
             orders.add(Order(0, "Maarheeze", 0, 0, 0, 0.0, 287, 56071576L, 513090749L))
             orderMap[0] = orders[0]
             for (line in lines) {

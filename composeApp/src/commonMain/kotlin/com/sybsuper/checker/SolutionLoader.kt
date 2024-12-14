@@ -41,11 +41,6 @@ class SolutionLoader {
 
             val dailyVehicleCount = params[2]
             val orderId = params[3]
-            if (orderId !in orderIndices) return listOf(
-                Comment(
-                    "Invalid order id on line [${index + 1}]: $line", Severity.ERROR
-                )
-            )
 
             val order = Problem.orderMap[orderId] ?: return listOf(
                 Comment(
