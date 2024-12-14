@@ -8,10 +8,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -46,6 +43,7 @@ fun App() {
         Problem.init()
         loading = false
     }
+    var displayedTrips by remember { mutableStateOf(mutableSetOf<TripIdentifier>()) }
     MaterialTheme {
         // load screen for Problem init
         AnimatedVisibility(
@@ -75,17 +73,19 @@ fun App() {
             }
             Row {
                 when (menuItem) {
-                    MenuItem.HOME -> Home(commentsList, solution, coroutineScope)
-                    MenuItem.VISUALIZER -> Visualizer(solution)
+                    MenuItem.HOME -> Home(commentsList, solution, displayedTrips, coroutineScope)
+                    MenuItem.VISUALIZER -> Visualizer(solution, displayedTrips)
                 }
             }
         }
     }
 }
 
+data class TripIdentifier(val day: Byte, val vehicle: UShort, val trip: UShort)
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun Visualizer(solution: Solution) {
+fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
     val textMeasurer = rememberTextMeasurer()
     val zoom = remember { mutableStateOf(1f) }
     val scaleX = remember { mutableStateOf(1f) }
@@ -107,7 +107,34 @@ fun Visualizer(solution: Solution) {
 
     fun screenToCoordY(y: Float) =
         ((y - height.value / 2) / (scaleY.value * zoom.value) + zoomCenter.value.second).toLong()
-
+    Row {
+        for (day in 0 until 5) {
+            Column {
+                Text("Day ${day + 1}")
+                for (vehicle in 0 until 2) {
+                    Text("Vehicle ${vehicle + 1}")
+                    var count = 0
+                    for (order in solution.trips.getOrNull(vehicle)?.getOrNull(day) ?: emptyList()) {
+                        if (order.id != 0u.toUShort()) continue
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val tuple = TripIdentifier(day.toByte(), vehicle.toUShort(), count.toUShort())
+                            var checked by remember { mutableStateOf(true) }
+                            Checkbox(checked, onCheckedChange = {
+                                checked = it
+                                if (checked) {
+                                    displayedTrips.add(tuple)
+                                } else {
+                                    displayedTrips.remove(tuple)
+                                }
+                            })
+                            Text("Trip ${count + 1}")
+                        }
+                        count++
+                    }
+                }
+            }
+        }
+    }
     Canvas(modifier = Modifier.fillMaxSize().onPointerEvent(PointerEventType.Move) {
         val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
         mousePos.value = newPos
@@ -154,17 +181,22 @@ fun Visualizer(solution: Solution) {
         )
         var lastNode = Problem.orderMap[0u]!!
         var tripId = 0
-        for (vehicle in solution.trips) for (day in vehicle) for (order in day) {
-            val node = order
-            drawLine(
-                start = Offset(coordToScreenX(lastNode.coordX), coordToScreenY(lastNode.coordY)),
-                end = Offset(coordToScreenX(node.coordX), coordToScreenY(node.coordY)),
-                color = colors[tripId % colors.size],
-                strokeWidth = 1.33f
-            )
-            lastNode = node
-            if (node.id == 0u.toUShort()) {
-                tripId++
+        for ((vehicleId,vehicle) in solution.trips.withIndex()) for ((dayId, day) in vehicle.withIndex()) {
+            var dailyTripId = 0
+            for (order in day) {
+                val node = order
+                if (TripIdentifier(dayId.toByte(),vehicleId.toUShort(),dailyTripId.toUShort()) in displayedTrips)
+                    drawLine(
+                        start = Offset(coordToScreenX(lastNode.coordX), coordToScreenY(lastNode.coordY)),
+                        end = Offset(coordToScreenX(node.coordX), coordToScreenY(node.coordY)),
+                        color = colors[tripId % colors.size],
+                        strokeWidth = 1.33f
+                    )
+                lastNode = node
+                if (node.id == 0u.toUShort()) {
+                    dailyTripId++
+                    tripId++
+                }
             }
         }
 
@@ -214,7 +246,7 @@ private fun DrawScope.drawNode(
 }
 
 @Composable
-fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, coroutineScope: CoroutineScope) {
+fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, displayedTrips: MutableSet<TripIdentifier>, coroutineScope: CoroutineScope) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)
     ) {
@@ -223,6 +255,24 @@ fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, coroutine
                 val solutionLoader = SolutionLoader()
                 val comments = solutionLoader.loadString(it)
                 solution.trips = solutionLoader.solution.trips
+                displayedTrips.clear()
+                solution.trips.forEachIndexed { vehicleId, vehicleTrips ->
+                    vehicleTrips.forEachIndexed { dayId, dayTrips ->
+                        var tripId = 0
+                        dayTrips.forEach { node ->
+                            if (node.id == 0u.toUShort()) {
+                                displayedTrips.add(
+                                    TripIdentifier(
+                                        dayId.toByte(),
+                                        vehicleId.toUShort(),
+                                        tripId.toUShort()
+                                    )
+                                )
+                                tripId++
+                            }
+                        }
+                    }
+                }
                 commentsList.clear()
                 coroutineScope.launch {
                     delay(100)
