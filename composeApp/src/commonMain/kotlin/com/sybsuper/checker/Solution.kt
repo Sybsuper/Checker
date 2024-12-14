@@ -107,6 +107,15 @@ class Solution {
                     }
                     lastOrder = order
                 }
+                if (lastOrder != Problem.orderMap[0u]) {
+                    comments.add(
+                        Comment(
+                            "Vehicle ${vehiceleId + 1} on day ${dayId + 1} on trip $tripId does not return to the depot.",
+                            Severity.ERROR
+                        )
+                    )
+                    feasible = false
+                }
                 if (time > 43200.0) {
                     comments.add(
                         Comment(
@@ -119,14 +128,18 @@ class Solution {
                 durationSeconds += time
             }
         }
-
-        comments.add(Comment("Total duration: ${(durationSeconds / 60.0).round(2)} minutes", Severity.INFO))
-        comments.add(Comment("Declined penalty: ${(declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
-        comments.add(Comment("Score: ${(durationSeconds / 60.0 + declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
-        comments.add(Comment("Orders declined: ${declinedSet.size} ${declinedSet.map { it.id }}", Severity.INFO))
+        var i = 0
+        comments.add(i++,Comment("Score: ${(durationSeconds / 60.0 + declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
+        comments.add(i++, Comment("Total duration: ${(durationSeconds / 60.0).round(2)} minutes", Severity.INFO))
+        comments.add(i++, Comment("Declined penalty: ${(declinedPenalty / 60.0).round(2)} minutes", Severity.INFO))
+        comments.add(i,Comment("Orders declined: ${declinedSet.size} ${declinedSet.map { it.id }}", Severity.INFO))
 
 
         val score = Score(durationSeconds, declinedPenalty, feasible)
+        comments.sortBy { it.severity }
+        if (!feasible) {
+            comments.add(0, Comment("Solution is not feasible. See errors below for reasons.", Severity.ERROR))
+        }
         return comments to score
     }
 

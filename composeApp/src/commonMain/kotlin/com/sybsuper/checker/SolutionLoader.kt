@@ -13,6 +13,9 @@ class SolutionLoader {
         val orderIndices = orders.map { it.id }.toSet()
         solution.trips.add(mutableListOf())
         solution.trips.add(mutableListOf())
+        var expectedId = 1
+        var lastday = 0
+        var lasttruck = 0
 
         for ((index, line) in lines.withIndex()) {
             val params = line.split(";").map {
@@ -39,7 +42,18 @@ class SolutionLoader {
             val day = params[1]
             if (day !in 1..5) return listOf(Comment("Invalid day number on line [${index + 1}]: $line", Severity.ERROR))
 
+            if (day != lastday || vehicle != lasttruck) {
+                lastday = day
+                lasttruck = vehicle
+                expectedId = 1
+            }
+
             val dailyVehicleCount = params[2]
+            if (dailyVehicleCount != expectedId) return listOf(
+                Comment(
+                    "Invalid trip counter (expected: $expectedId) on line [${index + 1}]: $line", Severity.ERROR
+                )
+            )
             val orderId = params[3].toUShort()
 
             val order = Problem.orderMap[orderId] ?: return listOf(
@@ -51,6 +65,7 @@ class SolutionLoader {
                 solution.trips[vehicle - 1].add(mutableListOf())
             }
             solution.trips[vehicle - 1][day - 1].add(order)
+            expectedId++
         }
 
         val (cs, score) = solution.computeScore()

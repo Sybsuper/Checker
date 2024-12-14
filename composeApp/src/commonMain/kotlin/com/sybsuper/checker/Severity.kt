@@ -1,7 +1,7 @@
 package com.sybsuper.checker
 
 enum class Severity {
-    INFO,
+    ERROR,
     WARNING,
-    ERROR
+    INFO
 }
