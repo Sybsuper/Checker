@@ -36,7 +36,7 @@ fun CommentItem(comment: Comment) {
     Card(
         border = BorderStroke(color = borderColor, width = Dp(4f)),
         backgroundColor = backgroundColor,
-        modifier = Modifier.padding(Dp(4f))
+        modifier = Modifier.padding(vertical = Dp(2f))
     ) {
         Row(modifier = Modifier.padding(Dp(8f))) {
             Text(comment.severity.name + ": ", fontWeight = FontWeight.Bold)
