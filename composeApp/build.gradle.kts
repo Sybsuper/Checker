@@ -56,9 +56,18 @@ compose.desktop {
         mainClass = "com.sybsuper.checker.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.sybsuper.checker"
+            targetFormats(TargetFormat.Exe, TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "Checker"
             packageVersion = "1.0.0"
+            windows {
+                shortcut = true
+            }
+        }
+
+        buildTypes.release.proguard {
+            obfuscate.set(false)
+            optimize.set(false)
+            version.set("7.4.0")
         }
     }
 }

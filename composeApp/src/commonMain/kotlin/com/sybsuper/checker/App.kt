@@ -89,18 +89,18 @@ data class TripIdentifier(val day: Byte, val vehicle: UShort, val trip: UShort)
 @Composable
 fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
     val textMeasurer = rememberTextMeasurer()
-    val zoom = remember { mutableStateOf(1f) }
-    val scaleX = remember { mutableStateOf(1f) }
-    val scaleY = remember { mutableStateOf(1f) }
-    val mousePos = remember { mutableStateOf(Offset(0f, 0f)) }
+    var zoom by remember { mutableStateOf(1f) }
+    var scaleX by remember { mutableStateOf(1f) }
+    var scaleY by remember { mutableStateOf(1f) }
+    var mousePos by remember { mutableStateOf(Offset(0f, 0f)) }
     val minCoordX = Problem.orders.minOf { it.coordX }
     val minCoordY = Problem.orders.minOf { it.coordY }
     val maxCoordX = Problem.orders.maxOf { it.coordX }
     val maxCoordY = Problem.orders.maxOf { it.coordY }
     val rangeX = maxCoordX - minCoordX
     val rangeY = maxCoordY - minCoordY
-    val width = remember { mutableStateOf(0f) }
-    val height = remember { mutableStateOf(0f) }
+    var width by remember { mutableStateOf(0f) }
+    var height by remember { mutableStateOf(0f) }
     val colors = listOf(
         Color(0.8f, 0.2f, 0.3f),
         Color(0.1f, 0.9f, 0.4f),
@@ -123,14 +123,14 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
         Color(0.4f, 0.3f, 0.9f),
         Color(0.9f, 0.8f, 0.1f)
     )
-    val zoomCenter = remember { mutableStateOf((minCoordX + maxCoordX) / 2 to (minCoordY + maxCoordY) / 2) }
-    fun coordToScreenX(x: Long) = (x - zoomCenter.value.first) * scaleX.value * zoom.value + width.value / 2
-    fun coordToScreenY(y: Long) = (y - zoomCenter.value.second) * scaleY.value * zoom.value + height.value / 2
+    var zoomCenter by remember { mutableStateOf((minCoordX + maxCoordX) / 2 to (minCoordY + maxCoordY) / 2) }
+    fun coordToScreenX(x: Long) = (x - zoomCenter.first) * scaleX * zoom + width / 2
+    fun coordToScreenY(y: Long) = (y - zoomCenter.second) * scaleY * zoom + height / 2
     fun screenToCoordX(x: Float) =
-        ((x - width.value / 2) / (scaleX.value * zoom.value) + zoomCenter.value.first).toLong()
+        ((x - width / 2) / (scaleX * zoom) + zoomCenter.first).toLong()
 
     fun screenToCoordY(y: Float) =
-        ((y - height.value / 2) / (scaleY.value * zoom.value) + zoomCenter.value.second).toLong()
+        ((y - height / 2) / (scaleY * zoom) + zoomCenter.second).toLong()
     Box {
         Row(
             modifier = Modifier.zIndex(1f).padding(8.dp)
@@ -167,31 +167,30 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
         }
         Canvas(modifier = Modifier.fillMaxSize().onPointerEvent(PointerEventType.Move) {
             val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
-            mousePos.value = newPos
+            mousePos = newPos
         }.onPointerEvent(PointerEventType.Scroll) {
             val scrollChange = -it.changes.map { it.scrollDelta.y }.sum()
-            val center = Offset(width.value / 2, height.value / 2)
-            mousePos.value = it.changes.last().position
+            val center = Offset(width / 2, height / 2)
+            mousePos = it.changes.last().position
 
-            val tpos = center + (mousePos.value - center) * (if (scrollChange > 0) 0.125f else -0.124f)
-            zoomCenter.value = screenToCoordX(tpos.x) to screenToCoordY(tpos.y)
-//        zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
-            zoom.value *= 1 + scrollChange / 25
+            val tpos = center + (mousePos - center) * (if (scrollChange > 0) 0.125f else -0.124f)
+            zoomCenter = screenToCoordX(tpos.x) to screenToCoordY(tpos.y)
+            zoom *= 1 + scrollChange / 25
         }.onPointerEvent(PointerEventType.Press) {
             if (it.button == PointerButton.Tertiary) {
                 val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
-                mousePos.value = newPos
-                zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
-                zoom.value = 1f
+                mousePos = newPos
+                zoomCenter = screenToCoordX(mousePos.x) to screenToCoordY(mousePos.y)
+                zoom = 1f
             }
         }) {
-            width.value = size.width
-            height.value = size.height
-            scaleX.value = width.value / rangeX
-            scaleY.value = height.value / rangeY
+            width = size.width
+            height = size.height
+            scaleX = width / rangeX
+            scaleY = height / rangeY
             drawCircle(
                 color = Color.Black, radius = 2.5f, center = Offset(
-                    coordToScreenX(screenToCoordX(mousePos.value.x)), coordToScreenY(screenToCoordY(mousePos.value.y))
+                    coordToScreenX(screenToCoordX(mousePos.x)), coordToScreenY(screenToCoordY(mousePos.y))
                 )
             )
 
@@ -228,8 +227,8 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
                     radius = 2.5f,
                     center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
                 )
-                if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 &&
-                    mousePos.value.y in coordToScreenY(order.coordY) - 3..coordToScreenY(order.coordY) + 3
+                if (mousePos.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 &&
+                    mousePos.y in coordToScreenY(order.coordY) - 3..coordToScreenY(order.coordY) + 3
                 ) {
                     drawCircle(
                         color = Color.Black,
@@ -241,7 +240,7 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
                         drawNode(textMeasurer, order, pos)
                     } else {
                         val pos = Offset(
-                            (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
+                            (((count * 100) / height.toInt()) * 300f) % width, (count * 100) % height
                         )
                         drawNode(textMeasurer, order, pos)
                     }

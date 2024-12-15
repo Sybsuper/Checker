@@ -33,12 +33,6 @@ jobs:
       - name: Test and Build
         run: chmod +x ./gradlew && ./gradlew :composeApp:build
 
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4.3.3 # https://github.com/actions/upload-artifact/releases
-        with:
-          name: Click here to download
-          path: composeApp/build/libs/composeApp-desktop.jar
-
       - name: Copy "uninstantiated" file over (workaround for now)
         run: cp composeApp/build/compileSync/wasmJs/main/productionExecutable/kotlin/composeApp.uninstantiated.mjs composeApp/build/dist/wasmJs/productionExecutable
 
@@ -50,3 +44,30 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           folder: composeApp/build/dist/wasmJs/productionExecutable # The folder the action should deploy.
           clean: true # Automatically remove deleted files from the deploy branch
+
+      - name: Publish Exe
+        run: ./gradlew :packageReleaseExe
+
+      - name: Upload Exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: Checker.exe
+          path: $(find composeApp/build/compose/binaries/main-release/exe -name "Checker-*.exe")
+
+      - name: Publish Msi
+        run: ./gradlew :packageReleaseMsi
+
+      - name: Upload Msi
+        uses: actions/upload-artifact@v4
+        with:
+          name: Checker.msi
+          path: $(find composeApp/build/compose/binaries/main-release/msi -name "Checker-*.msi")
+
+      - name: Publish Jar
+        run: ./gradlew :packageReleaseUberJarForCurrentOS
+
+      - name: Upload Jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: Checker.jar
+          path: $(find composeApp/build/compose/jars -name "Checker-*.jar")
