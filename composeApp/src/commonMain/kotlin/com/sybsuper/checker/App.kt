@@ -7,6 +7,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,7 +65,7 @@ fun App() {
             }
         }
         Column {
-            Row {
+            Row(modifier = Modifier.zIndex(10f)) {
                 Button(onClick = { menuItem = MenuItem.HOME }) {
                     Text("Home")
                 }
@@ -99,6 +101,28 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
     val rangeY = maxCoordY - minCoordY
     val width = remember { mutableStateOf(0f) }
     val height = remember { mutableStateOf(0f) }
+    val colors = listOf(
+        Color(0.8f, 0.2f, 0.3f),
+        Color(0.1f, 0.9f, 0.4f),
+        Color(0.6f, 0.3f, 0.9f),
+        Color(0.2f, 0.7f, 0.1f),
+        Color(0.9f, 0.6f, 0.2f),
+        Color(0.3f, 0.8f, 0.7f),
+        Color(0.7f, 0.2f, 0.8f),
+        Color(0.4f, 0.6f, 0.1f),
+        Color(0.1f, 0.4f, 0.9f),
+        Color(0.5f, 0.9f, 0.3f),
+        Color(0.9f, 0.1f, 0.5f),
+        Color(0.2f, 0.9f, 0.7f),
+        Color(0.7f, 0.4f, 0.3f),
+        Color(0.5f, 0.2f, 0.8f),
+        Color(0.1f, 0.6f, 0.3f),
+        Color(0.8f, 0.4f, 0.2f),
+        Color(0.3f, 0.7f, 0.9f),
+        Color(0.6f, 0.1f, 0.5f),
+        Color(0.4f, 0.3f, 0.9f),
+        Color(0.9f, 0.8f, 0.1f)
+    )
     val zoomCenter = remember { mutableStateOf((minCoordX + maxCoordX) / 2 to (minCoordY + maxCoordY) / 2) }
     fun coordToScreenX(x: Long) = (x - zoomCenter.value.first) * scaleX.value * zoom.value + width.value / 2
     fun coordToScreenY(y: Long) = (y - zoomCenter.value.second) * scaleY.value * zoom.value + height.value / 2
@@ -107,125 +131,122 @@ fun Visualizer(solution: Solution, displayedTrips: MutableSet<TripIdentifier>) {
 
     fun screenToCoordY(y: Float) =
         ((y - height.value / 2) / (scaleY.value * zoom.value) + zoomCenter.value.second).toLong()
-    Row {
-        for (day in 0 until 5) {
-            Column {
-                Text("Day ${day + 1}")
-                for (vehicle in 0 until 2) {
-                    Text("Vehicle ${vehicle + 1}")
-                    var count = 0
-                    for (order in solution.trips.getOrNull(vehicle)?.getOrNull(day) ?: emptyList()) {
-                        if (order.id != 0u.toUShort()) continue
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            val tuple = TripIdentifier(day.toByte(), vehicle.toUShort(), count.toUShort())
-                            var checked by remember { mutableStateOf(true) }
-                            Checkbox(checked, onCheckedChange = {
-                                checked = it
-                                if (checked) {
-                                    displayedTrips.add(tuple)
-                                } else {
-                                    displayedTrips.remove(tuple)
-                                }
-                            })
-                            Text("Trip ${count + 1}")
+    Box {
+        Row(
+            modifier = Modifier.zIndex(1f).padding(8.dp)
+                .background(Color(0.7f, 0.7f, 0.7f, 0.7f), shape = RoundedCornerShape(8.dp)).align(Alignment.TopEnd)
+        ) {
+            var totaltripId = 0
+            for (day in 0 until 5) {
+                Column(modifier = Modifier.padding(4.dp)) {
+                    Text("Day ${day + 1}")
+                    for (vehicle in 0 until 2) {
+                        Text("Vehicle ${vehicle + 1}")
+                        var count = 0
+                        for (order in solution.trips.getOrNull(vehicle)?.getOrNull(day) ?: emptyList()) {
+                            if (order.id != 0u.toUShort()) continue
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                val tuple = TripIdentifier(day.toByte(), vehicle.toUShort(), count.toUShort())
+                                var checked by remember { mutableStateOf(true) }
+                                Checkbox(checked, onCheckedChange = {
+                                    checked = it
+                                    if (checked) {
+                                        displayedTrips.add(tuple)
+                                    } else {
+                                        displayedTrips.remove(tuple)
+                                    }
+                                })
+                                Text("Trip ${count + 1}", color = colors[totaltripId % colors.size])
+                            }
+                            count++
+                            totaltripId++
                         }
-                        count++
                     }
                 }
             }
         }
-    }
-    Canvas(modifier = Modifier.fillMaxSize().onPointerEvent(PointerEventType.Move) {
-        val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
-        mousePos.value = newPos
-    }.onPointerEvent(PointerEventType.Scroll) {
-        val scrollChange = -it.changes.map { it.scrollDelta.y }.sum()
-        val center = Offset(width.value / 2, height.value / 2)
-        mousePos.value = it.changes.last().position
-
-        val tpos = center + (mousePos.value - center) * (if (scrollChange > 0) 0.125f else -0.124f)
-        zoomCenter.value = screenToCoordX(tpos.x) to screenToCoordY(tpos.y)
-//        zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
-        zoom.value *= 1 + scrollChange / 25
-    }.onPointerEvent(PointerEventType.Press) {
-        if (it.button == PointerButton.Tertiary) {
+        Canvas(modifier = Modifier.fillMaxSize().onPointerEvent(PointerEventType.Move) {
             val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
             mousePos.value = newPos
-            zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
-            zoom.value = 1f
-        }
-    }) {
-        width.value = size.width
-        height.value = size.height
-        scaleX.value = width.value / rangeX
-        scaleY.value = height.value / rangeY
-        drawCircle(
-            color = Color.Black, radius = 2.5f, center = Offset(
-                coordToScreenX(screenToCoordX(mousePos.value.x)), coordToScreenY(screenToCoordY(mousePos.value.y))
-            )
-        )
+        }.onPointerEvent(PointerEventType.Scroll) {
+            val scrollChange = -it.changes.map { it.scrollDelta.y }.sum()
+            val center = Offset(width.value / 2, height.value / 2)
+            mousePos.value = it.changes.last().position
 
-        val colors = listOf(
-            Color.Red,
-            Color.Green,
-            Color.Blue,
-            Color.Magenta,
-            Color.Cyan,
-            Color.Yellow,
-            Color.Gray,
-            Color.DarkGray,
-            Color.LightGray,
-            Color(0.2f, 0.5f, 0.8f),
-            Color(0.8f, 0.5f, 0.2f),
-            Color(0.3f, 0.9f, 0.7f)
-        )
-        var lastNode = Problem.orderMap[0u]!!
-        var tripId = 0
-        for ((vehicleId,vehicle) in solution.trips.withIndex()) for ((dayId, day) in vehicle.withIndex()) {
-            var dailyTripId = 0
-            for (order in day) {
-                val node = order
-                if (TripIdentifier(dayId.toByte(),vehicleId.toUShort(),dailyTripId.toUShort()) in displayedTrips)
-                    drawLine(
+            val tpos = center + (mousePos.value - center) * (if (scrollChange > 0) 0.125f else -0.124f)
+            zoomCenter.value = screenToCoordX(tpos.x) to screenToCoordY(tpos.y)
+//        zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
+            zoom.value *= 1 + scrollChange / 25
+        }.onPointerEvent(PointerEventType.Press) {
+            if (it.button == PointerButton.Tertiary) {
+                val newPos = it.changes.lastOrNull()?.position ?: return@onPointerEvent
+                mousePos.value = newPos
+                zoomCenter.value = screenToCoordX(mousePos.value.x) to screenToCoordY(mousePos.value.y)
+                zoom.value = 1f
+            }
+        }) {
+            width.value = size.width
+            height.value = size.height
+            scaleX.value = width.value / rangeX
+            scaleY.value = height.value / rangeY
+            drawCircle(
+                color = Color.Black, radius = 2.5f, center = Offset(
+                    coordToScreenX(screenToCoordX(mousePos.value.x)), coordToScreenY(screenToCoordY(mousePos.value.y))
+                )
+            )
+
+            var lastNode = Problem.orderMap[0u]!!
+            var tripId = 0
+            for (dayId in 0 until 5) for (vehicleId in 0 until 2) {
+                val day = solution.trips.getOrNull(vehicleId)?.getOrNull(dayId) ?: continue
+                var dailyTripId = 0
+                for (order in day) {
+                    val node = order
+                    if (TripIdentifier(
+                            dayId.toByte(),
+                            vehicleId.toUShort(),
+                            dailyTripId.toUShort()
+                        ) in displayedTrips
+                    ) drawLine(
                         start = Offset(coordToScreenX(lastNode.coordX), coordToScreenY(lastNode.coordY)),
                         end = Offset(coordToScreenX(node.coordX), coordToScreenY(node.coordY)),
                         color = colors[tripId % colors.size],
                         strokeWidth = 1.33f
                     )
-                lastNode = node
-                if (node.id == 0u.toUShort()) {
-                    dailyTripId++
-                    tripId++
+                    lastNode = node
+                    if (node.id == 0u.toUShort()) {
+                        dailyTripId++
+                        tripId++
+                    }
                 }
             }
-        }
 
-        var count = 0
-        for (order in Problem.orders) {
-            drawCircle(
-                color = Color.Black,
-                radius = 2.5f,
-                center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
-            )
-            if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 && mousePos.value.y in coordToScreenY(
-                    order.coordY
-                ) - 3..coordToScreenY(order.coordY) + 3
-            ) {
+            var count = 0
+            for (order in Problem.orders) {
                 drawCircle(
                     color = Color.Black,
-                    radius = 5f,
+                    radius = 2.5f,
                     center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
                 )
-                if (count == 0) {
-                    val pos = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
-                    drawNode(textMeasurer, order, pos)
-                } else {
-                    val pos = Offset(
-                        (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
+                if (mousePos.value.x in coordToScreenX(order.coordX) - 3..coordToScreenX(order.coordX) + 3 &&
+                    mousePos.value.y in coordToScreenY(order.coordY) - 3..coordToScreenY(order.coordY) + 3
+                ) {
+                    drawCircle(
+                        color = Color.Black,
+                        radius = 5f,
+                        center = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
                     )
-                    drawNode(textMeasurer, order, pos)
+                    if (count == 0) {
+                        val pos = Offset(coordToScreenX(order.coordX), coordToScreenY(order.coordY))
+                        drawNode(textMeasurer, order, pos)
+                    } else {
+                        val pos = Offset(
+                            (((count * 100) / height.value.toInt()) * 300f) % width.value, (count * 100) % height.value
+                        )
+                        drawNode(textMeasurer, order, pos)
+                    }
+                    count++
                 }
-                count++
             }
         }
     }
@@ -246,7 +267,12 @@ private fun DrawScope.drawNode(
 }
 
 @Composable
-fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, displayedTrips: MutableSet<TripIdentifier>, coroutineScope: CoroutineScope) {
+fun Home(
+    commentsList: SnapshotStateList<Comment>,
+    solution: Solution,
+    displayedTrips: MutableSet<TripIdentifier>,
+    coroutineScope: CoroutineScope
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)
     ) {
@@ -263,9 +289,7 @@ fun Home(commentsList: SnapshotStateList<Comment>, solution: Solution, displayed
                             if (node.id == 0u.toUShort()) {
                                 displayedTrips.add(
                                     TripIdentifier(
-                                        dayId.toByte(),
-                                        vehicleId.toUShort(),
-                                        tripId.toUShort()
+                                        dayId.toByte(), vehicleId.toUShort(), tripId.toUShort()
                                     )
                                 )
                                 tripId++
