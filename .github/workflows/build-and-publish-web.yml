@@ -10,13 +10,13 @@ on:
       - master
       - main
 
-permissions:
-  contents: write
 
 jobs:
-  build:
-    name: Test and Build
+  pages:
+    name: Build and Publish to Pages
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
 
       # Setup Java 1.8 environment for the next steps
@@ -45,14 +45,28 @@ jobs:
           folder: composeApp/build/dist/wasmJs/productionExecutable # The folder the action should deploy.
           clean: true # Automatically remove deleted files from the deploy branch
 
+  binaries:
+    name: Build and Publish Executables
+    runs-on: windows-latest
+    steps:
+      # Setup Java 1.8 environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+
       - name: Publish Exe
         run: ./gradlew :composeApp:packageReleaseExe
 
       - name: Upload Exe
         uses: actions/upload-artifact@v4
         with:
-          name: Checker.exe
-          path: $(find composeApp/build/compose/binaries/main-release/exe -name "Checker-*.exe")
+          name: Checker Executable
+          path: composeApp/build/compose/binaries/main-release/exe
 
       - name: Publish Msi
         run: ./gradlew :composeApp:packageReleaseMsi
@@ -60,8 +74,8 @@ jobs:
       - name: Upload Msi
         uses: actions/upload-artifact@v4
         with:
-          name: Checker.msi
-          path: $(find composeApp/build/compose/binaries/main-release/msi -name "Checker-*.msi")
+          name: Checker Windows Installer
+          path: composeApp/build/compose/binaries/main-release/msi
 
       - name: Publish Jar
         run: ./gradlew :composeApp:packageReleaseUberJarForCurrentOS
@@ -69,5 +83,5 @@ jobs:
       - name: Upload Jar
         uses: actions/upload-artifact@v4
         with:
-          name: Checker.jar
-          path: $(find composeApp/build/compose/jars -name "Checker-*.jar")
+          name: Checker Jar Executable
+          path: composeApp/build/compose/jars
