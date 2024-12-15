@@ -46,7 +46,7 @@ jobs:
           clean: true # Automatically remove deleted files from the deploy branch
 
       - name: Publish Exe
-        run: ./gradlew :packageReleaseExe
+        run: ./gradlew :composeApp:packageReleaseExe
 
       - name: Upload Exe
         uses: actions/upload-artifact@v4
@@ -55,7 +55,7 @@ jobs:
           path: $(find composeApp/build/compose/binaries/main-release/exe -name "Checker-*.exe")
 
       - name: Publish Msi
-        run: ./gradlew :packageReleaseMsi
+        run: ./gradlew :composeApp:packageReleaseMsi
 
       - name: Upload Msi
         uses: actions/upload-artifact@v4
@@ -64,7 +64,7 @@ jobs:
           path: $(find composeApp/build/compose/binaries/main-release/msi -name "Checker-*.msi")
 
       - name: Publish Jar
-        run: ./gradlew :packageReleaseUberJarForCurrentOS
+        run: ./gradlew :composeApp:packageReleaseUberJarForCurrentOS
 
       - name: Upload Jar
         uses: actions/upload-artifact@v4
