@@ -1,18 +1,19 @@
-This is a Kotlin Multiplatform project targeting Web, Desktop.
+# Checker
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+Here is a simple checker for the OPCO "grote opdracht" of the course "Optimalization and Complexity"
+at [Utrecht University](https://www.uu.nl/). The checker is written in Kotlin using the Kotlin Multiplatform framework.
 
+## Usage
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+You can use the checker online at [https://sybsuper.github.io/Checker/](https://sybsuper.github.io/Checker/) (zooming
+currently is not working properly in the web version).
+Alternatively the checker can be run locally by downloading the latest release from
+the [releases page](https://github.com/Sybsuper/Checker/releases).
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [GitHub](https://github.com/JetBrains/compose-multiplatform/issues).
+## Screenshots
 
-You can open the web application by running the `:composeApp:wasmJsBrowserDevelopmentRun` Gradle task.
+### The main input screen
+![Home Page](images/home.png)
+
+### The visualizer
+![Visualizer](images/visualizer.png)
